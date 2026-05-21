@@ -40,29 +40,48 @@
 
   const peers = new Map();
 
+  const peerConfig = {
+    trickle: false,
+    config: {
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    }
+  };
+
   function createPeer(userToSignal, callerId, stream) {
-    const peer = new Peer({ initiator: true, trickle: false, stream: stream ?? undefined });
+    const peer = new Peer({ initiator: true, stream: stream ?? undefined, ...peerConfig });
 
     peer.on('signal', (signal) => {
+      console.log('sending-signal to', userToSignal);
       socket.emit('sending-signal', { userToSignal, callerId, signal });
     });
 
     peer.on('stream', (remoteStream) => {
+      console.log('received remote stream from', userToSignal);
       addRemote(userToSignal, remoteStream);
+    });
+
+    peer.on('error', (err) => {
+      console.error('peer error (initiator)', userToSignal, err);
     });
 
     peers.set(userToSignal, { peer });
   }
 
   function addPeer(incomingSignal, callerId, stream) {
-    const peer = new Peer({ initiator: false, trickle: false, stream: stream ?? undefined });
+    const peer = new Peer({ initiator: false, stream: stream ?? undefined, ...peerConfig });
 
     peer.on('signal', (signal) => {
+      console.log('returning-signal to', callerId);
       socket.emit('returning-signal', { callerId, signal });
     });
 
     peer.on('stream', (remoteStream) => {
+      console.log('received remote stream from', callerId);
       addRemote(callerId, remoteStream);
+    });
+
+    peer.on('error', (err) => {
+      console.error('peer error (receiver)', callerId, err);
     });
 
     peer.signal(incomingSignal);
