@@ -104,6 +104,16 @@
 
   onMount(async () => {
     await startLocal();
+
+    if (typeof window.SimplePeer !== 'function') {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = '/simplepeer.min.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Failed to load simplepeer.min.js'));
+        document.head.appendChild(s);
+      });
+    }
     Peer = window.SimplePeer;
 
     console.log('simple-peer loaded', typeof Peer, Peer?.name);
