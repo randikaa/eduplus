@@ -48,6 +48,11 @@
   };
 
   function createPeer(userToSignal, callerId, stream) {
+    console.log('createPeer', userToSignal, 'Peer valid?', typeof Peer === 'function');
+    if (typeof Peer !== 'function') {
+      console.error('cannot create peer, Peer is not constructor', Peer);
+      return;
+    }
     const peer = new Peer({ initiator: true, stream: stream ?? undefined, ...peerConfig });
 
     peer.on('signal', (signal) => {
@@ -68,6 +73,11 @@
   }
 
   function addPeer(incomingSignal, callerId, stream) {
+    console.log('addPeer', callerId, 'Peer valid?', typeof Peer === 'function');
+    if (typeof Peer !== 'function') {
+      console.error('cannot add peer, Peer is not constructor', Peer);
+      return;
+    }
     const peer = new Peer({ initiator: false, stream: stream ?? undefined, ...peerConfig });
 
     peer.on('signal', (signal) => {
@@ -90,9 +100,19 @@
 
   onMount(async () => {
     await startLocal();
-    const peerModule = await import('simple-peer');
-    Peer = peerModule.default ?? peerModule;
-    console.log('simple-peer loaded', typeof Peer);
+    let peerModule = await import('simple-peer');
+    Peer = peerModule.default ?? peerModule.Peer ?? peerModule;
+
+    if (typeof Peer !== 'function') {
+      console.warn('simple-peer default import was not constructor, trying browser bundle');
+      const browserPeer = await import('simple-peer/simplepeer.min.js');
+      Peer = browserPeer.default ?? browserPeer.Peer ?? browserPeer;
+    }
+
+    console.log('simple-peer loaded', typeof Peer, Peer?.name);
+    if (typeof Peer !== 'function') {
+      throw new Error('simple-peer constructor not found');
+    }
 
     const socketUrl = import.meta.env.DEV ? 'http://localhost:3000' : undefined;
     console.log('connecting socket to', socketUrl ?? 'same origin');
