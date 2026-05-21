@@ -42,10 +42,7 @@
   const peers = new Map();
 
   const peerConfig = {
-    trickle: false,
-    config: {
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-    }
+    trickle: true
   };
 
   function createPeer(userToSignal, callerId, stream) {
@@ -153,13 +150,6 @@
       const item = peers.get(payload.id);
       if (item) {
         item.peer.signal(payload.signal);
-      }
-    });
-
-    socket.on('user-joined', (userId) => {
-      console.log('user-joined', userId);
-      if (!peers.has(userId) && localStream) {
-        createPeer(userId, socket.id, localStream);
       }
     });
 
