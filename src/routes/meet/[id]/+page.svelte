@@ -72,7 +72,11 @@
   onMount(async () => {
     await startLocal();
 
-    socket = io('http://localhost:3000', {
+    const socketUrl = import.meta.env.DEV
+      ? 'http://localhost:3000'
+      : window.location.origin;
+
+    socket = io(socketUrl, {
       transports: ['websocket']
     });
 
