@@ -104,14 +104,7 @@
 
   onMount(async () => {
     await startLocal();
-    let peerModule = await import('simple-peer');
-    Peer = peerModule.default ?? peerModule.Peer ?? peerModule;
-
-    if (typeof Peer !== 'function') {
-      console.warn('simple-peer default import was not constructor, trying browser bundle');
-      const browserPeer = await import('simple-peer/simplepeer.min.js');
-      Peer = browserPeer.default ?? browserPeer.Peer ?? browserPeer;
-    }
+    Peer = window.SimplePeer;
 
     console.log('simple-peer loaded', typeof Peer, Peer?.name);
     if (typeof Peer !== 'function') {
