@@ -17,6 +17,7 @@
   async function startLocal() {
     try {
       localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      console.log('getUserMedia success');
     } catch (err) {
       console.error('getUserMedia error', err);
       mediaError = err?.name === 'NotAllowedError'
@@ -48,12 +49,15 @@
   };
 
   function createPeer(userToSignal, callerId, stream) {
-    console.log('createPeer', userToSignal, 'Peer valid?', typeof Peer === 'function');
+    console.log('createPeer', userToSignal, 'stream:', !!stream, 'Peer valid?', typeof Peer === 'function');
     if (typeof Peer !== 'function') {
       console.error('cannot create peer, Peer is not constructor', Peer);
       return;
     }
-    const peer = new Peer({ initiator: true, stream: stream ?? undefined, ...peerConfig });
+    const peer = new Peer({ initiator: true, ...peerConfig });
+    if (stream) {
+      peer.addStream(stream);
+    }
 
     peer.on('signal', (signal) => {
       console.log('sending-signal to', userToSignal);
@@ -73,12 +77,15 @@
   }
 
   function addPeer(incomingSignal, callerId, stream) {
-    console.log('addPeer', callerId, 'Peer valid?', typeof Peer === 'function');
+    console.log('addPeer', callerId, 'stream:', !!stream, 'Peer valid?', typeof Peer === 'function');
     if (typeof Peer !== 'function') {
       console.error('cannot add peer, Peer is not constructor', Peer);
       return;
     }
-    const peer = new Peer({ initiator: false, stream: stream ?? undefined, ...peerConfig });
+    const peer = new Peer({ initiator: false, ...peerConfig });
+    if (stream) {
+      peer.addStream(stream);
+    }
 
     peer.on('signal', (signal) => {
       console.log('returning-signal to', callerId);
@@ -146,6 +153,13 @@
       const item = peers.get(payload.id);
       if (item) {
         item.peer.signal(payload.signal);
+      }
+    });
+
+    socket.on('user-joined', (userId) => {
+      console.log('user-joined', userId);
+      if (!peers.has(userId) && localStream) {
+        createPeer(userId, socket.id, localStream);
       }
     });
 
