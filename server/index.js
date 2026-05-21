@@ -18,6 +18,7 @@ io.on('connection', (socket) => {
 
   socket.on('join-room', (roomID) => {
     const clients = Array.from(io.sockets.adapter.rooms.get(roomID) || []);
+    console.log('join-room', roomID, 'existing clients', clients);
     socket.join(roomID);
     // send existing users to the new client
     socket.emit('all-users', clients);

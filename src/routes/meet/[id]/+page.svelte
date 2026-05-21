@@ -72,16 +72,22 @@
   onMount(async () => {
     await startLocal();
 
-    const socketUrl = import.meta.env.DEV
-      ? 'http://localhost:3000'
-      : window.location.origin;
+    const socketUrl = import.meta.env.DEV ? 'http://localhost:3000' : undefined;
+    console.log('connecting socket to', socketUrl ?? 'same origin');
 
-    socket = io(socketUrl, {
-      transports: ['websocket']
-    });
+    socket = io(socketUrl);
 
     socket.on('connect', () => {
+      console.log('socket connected', socket.id);
       socket.emit('join-room', roomId);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('socket connect error', err);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('socket disconnected', reason);
     });
 
     socket.on('all-users', (users) => {
