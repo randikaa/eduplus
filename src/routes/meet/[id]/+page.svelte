@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import io from 'socket.io-client';
-  import Peer from 'simple-peer';
   import Video from '$lib/components/Video.svelte';
   import { page } from '$app/stores';
   import { get } from 'svelte/store';
@@ -10,6 +9,7 @@
   let remoteStreams: Array<{ id: string; stream: MediaStream }> = $state([]);
   let peerIds: string[] = $state([]);
   let socket: any;
+  let Peer: any;
   let mediaError = $state('');
   const params = get(page).params;
   const roomId = params.id;
@@ -90,6 +90,9 @@
 
   onMount(async () => {
     await startLocal();
+    const peerModule = await import('simple-peer');
+    Peer = peerModule.default ?? peerModule;
+    console.log('simple-peer loaded', typeof Peer);
 
     const socketUrl = import.meta.env.DEV ? 'http://localhost:3000' : undefined;
     console.log('connecting socket to', socketUrl ?? 'same origin');
